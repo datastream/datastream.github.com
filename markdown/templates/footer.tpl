@@ -1,7 +1,6 @@
-      </section>
     </div>
     <footer>
-      <p>Hosted on GitHub Pages &mdash; Theme by <a href="https://github.com/orderedlist">orderedlist</a></p>
+      <p>Hosted on GitHub Pages &mdash; Wrote by <a href="https://github.com/datastream">datastream</a></p>
     </footer>
     <!--[if !IE]><script>fixScale(document);</script><![endif]-->
 
