@@ -1,4 +1,10 @@
-### Update
+     Time-stamp: <2013-02-07 21:51:54 datastream>
+
+* [负载均衡](articles/elb)
+
+>  如果是作为大型网站的运维人员，那么不可避免的接触到
+
+> ...
 
 * [云环境下的监控服务](articles/monitor-systems-in-cloud)
 
@@ -12,7 +18,7 @@
 
 > ...
 
-* [高可靠的日志系统](articles/hight-available-sysload)
+* [高可靠的日志系统](articles/hight-available-syslog)
 
 >  在此之前我对日志处理的概念只是停留在syslog程序的层次。最近我自己维护的一个日志转发程序可能需要改造以适应 storm 计算集群的需求，所以特地的在这方面做了一些思考。
 
