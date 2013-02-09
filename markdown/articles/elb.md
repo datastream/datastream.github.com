@@ -58,7 +58,7 @@ tcp/http的高可用分2层：
 >ip地址的高可用其实就是设置ip，强制让交换机学习新的mac地址的功能。一般都是2台或者更多的服务器相互冗余。
 
 这方面没得说的，keepalived是首选。当然keepalived同时支持lvs的配置，所以很多人将这个和lvs混在一起了。
-如果不会用keepalived，自己写脚本也是可以的，但是除非你真的发现keepalived不还是，否则不推荐。
+如果不用keepalived，自己写脚本也是可以的，但是除非你真的发现keepalived无法满足要求，否则不推荐。
 
 
 ## 云环境下的ELB
