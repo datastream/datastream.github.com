@@ -20,7 +20,7 @@
     <header class="umbotron subhead" id="overview">
       <div class="container">
         <h1><a href="/">Dev Notes</a></h1>
-        <p class="lead">for islive {explore_world; eat_food; sleep}</p>
+        <p class="lead">for {explore_world; eat_food; sleep}</p>
       </div>
     </header>
     <div class="container well">
