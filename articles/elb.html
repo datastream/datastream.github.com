@@ -1,0 +1,165 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="chrome=1">
+    <title>Datastream.github.com by datastream</title>
+    <link rel="stylesheet" href="/stylesheets/bootstrap.css">
+    <link rel="stylesheet" href="/stylesheets/bootstrap-responsive.css">
+    <link rel="stylesheet" href="/stylesheets/datastream.css">
+    <link rel="stylesheet" href="/stylesheets/pygment_trac.css">
+    <script src="/javascripts/bootstrap.min.js"></script>
+    <script src="/javascripts/scale.fix.js"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+
+    
+  </head>
+  <body>
+    <header class="umbotron subhead" id="overview">
+      <div class="container">
+        <h1><a href="/">Dev Notes</a></h1>
+        <p class="lead">for {explore_world; eat_food; sleep}</p>
+      </div>
+    </header>
+    <div class="container well">
+<h1>负载均衡</h1>
+
+<p><strong>Time-stamp: <2013-02-17 11:49:58 datastream></strong></p>
+
+<hr />
+
+<ul>
+<li>前言</li>
+</ul>
+
+<blockquote>
+<p>如果是作为大型网站的运维人员，那么不可避免的接触到负载均衡的概念。我不清楚多少人确切的知道负载均衡的底层细节。
+写这篇文章的主要目的在于试图探讨云计算环境负载均衡设计（ <em>希望我没有写错太多</em> ）。</p>
+</blockquote>
+
+<h2>正文</h2>
+
+<p>在线正式的对外服务，很少不使用负载均衡设备。尤其是在业务量上去的时候，单节点的服务器根本无法支撑业务。
+很多时候，很多人将负载均衡和高可用联系在一起，实际上并不是。首先需要搞清楚的是，高可用只是负载均衡带来的某个附带特性，高可用和负载均衡是两个独立的领域。
+这两个领域都非常庞大，所以这里我们只讨论其中的子集：高可用的http/tcp负载均衡。</p>
+
+<h3>负载均衡方案</h3>
+
+<p>一般说到负载均衡，很多人可能会马上想起lvs。但是除了这个外，nginx反向代理，haproxy，其实也可以算是负载均衡软件。
+因为本质上负载均衡最主要的目的在于业务负载分流，只要哪个软件能做到这点都可以算是负载均衡软件。
+当然除了基于软件的负载均衡，还有F5之类的硬件负载均衡软件。在现在的业务环境中，粗略看上去，可供选择的负载均衡方案太多了。
+但是实际上每个选择都有自己的优缺点。nginx、haproxy、lvs在后端分流策略上都支持很丰富。</p>
+
+<ul>
+<li>1. nginx 反向代理</li>
+</ul>
+
+<blockquote>
+<p>优点：可以做分发前的重写，对http头做额外的调整，支持session等。</p>
+
+<p>缺点：大的http post的请求，会有额外的磁盘io开销，和业务延迟。
+纯tcp模式的支持始终不是非常放心。虽然前同事yaoweibin为nginx写过一个tcp模式的支持，但是目前没有大量的实践数据。</p>
+</blockquote>
+
+<ul>
+<li>2. haproxy</li>
+</ul>
+
+<blockquote>
+<p>优点：简单高效，支持session。</p>
+
+<p>缺点：多域名下，需要设置为http1.0处理。（虽然可以通过配置伪装成后端http1.1，但是感觉不是非常优雅）。</p>
+
+<p>说明：更改http头和日志功能不如nginx强大。</p>
+</blockquote>
+
+<ul>
+<li>3. lvs</li>
+</ul>
+
+<blockquote>
+<p>优点：dr模式特别有利于http get类的请求，因为返回流量不过lvs服务器。</p>
+
+<p>缺点：有点挑网卡，尤其是对网卡的包转发性能有要求。</p>
+
+<p>说明：说到这个一般我们只是用lvs的dr模式。不是说其他模式不好，而是感觉nat、tunnel模式没有太大的优势。
+因为这年头硬件cpu强悍，随便找个像样点的cpu都能跑满千兆网卡。</p>
+</blockquote>
+
+<ul>
+<li>4. F5之类的硬件</li>
+</ul>
+
+<blockquote>
+<p>优点：完善的商业支持，有钱就可以搞定</p>
+
+<p>缺点：还是钱的问题</p>
+</blockquote>
+
+<h3>高可用</h3>
+
+<p>tcp/http的高可用分2层：</p>
+
+<ol>
+<li>物理链路的高可用</li>
+<li>ip地址的高可用</li>
+</ol>
+
+<blockquote>
+<p>物理链路的高可用，一般是多条网线做聚合，或者2台机器保持心跳包通讯。</p>
+
+<p>ip地址的高可用其实就是设置ip，强制让交换机学习新的mac地址的功能。一般都是2台或者更多的服务器相互冗余。</p>
+</blockquote>
+
+<p>这方面没得说的，keepalived是首选。当然keepalived同时支持lvs的配置，所以很多人将这个和lvs混在一起了。
+如果不用keepalived，自己写脚本也是可以的，但是除非你真的发现keepalived无法满足要求，否则不推荐。</p>
+
+<h3>云环境下的ELB</h3>
+
+<p>在云环境里面，我们不需要考虑太多的特性，因为大部分用户只需要最简单的功能。
+如果不考虑ssl offload的问题，基本上直接选择haproxy就行。
+如果需要ssl offload，那么选择nginx。
+或者自己实现一个定制的负载均衡软件。
+如果选择nginx（tengine）、haproxy，为了适应云计算，这两者内部的监控数据可能需要自己额外的调整定制，但是工程量会少很多。</p>
+
+<h4>设计</h4>
+
+<ol>
+<li><p>所有的负载均衡软件都跑在云计算的instance上（例如：EC2），当然有很多种不同的示例</p></li>
+
+<li><p>配置分发推送机制</p></li>
+
+<li><p>动态扩容</p></li>
+</ol>
+
+<h5>关于LB实例</h5>
+
+<p>预先做好不同类型的镜像，需要的时候可以直接启动。</p>
+
+<h5>关于配置</h5>
+
+<p>主要是配置管理和调度。简单一点的，直接用puppet+自己写的配置数据库。
+kick puppet agent，然后对应节点主动去puppet master获取配置。
+puppet master通过自定义function从数据库或者api拿到配置，返回给客户端。
+puppet master通过report确认配置的有效性</p>
+
+<h5>关于扩容</h5>
+
+<p>这块可能是需要额外考虑的。首先这个扩容需要是动态的，最好是无缝的。目前看aws的做法，感觉是他们将配置重新分发后，直接改dns的。
+这个做法解决了扩容问题，但是不是无缝的。因为用户需要关注dns的变动。
+但是这个做起来比较容易，完全可以预先配置一堆的keeplived+lvs的服务器，然后只需要调度keepalived的lvs配置部分就ok了。</p>
+
+<p>如果是要做到无缝的，那么可能需要调度ip绑定。
+可能用float-ip能解决很多流量小于1G的需求，但更大的流量就需要更加复杂的方案。有时候可能不得不借助商业的硬件解决方案。</p>
+
+<h4>总结</h4>
+
+<p>ELB负载均衡的简单实现可能不难，但是要真的做到动态无缝的扩容切换，需要投入大量的调用和人力去研究优化。</p>
+    </div>
+    <footer>
+      <p>Hosted on GitHub Pages &mdash; Wrote by <a href="https://github.com/datastream">datastream</a></p>
+    </footer>
+    
+
+  </body>
+</html>
