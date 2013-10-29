@@ -21,3 +21,9 @@
 >  在此之前我对日志处理的概念只是停留在syslog程序的层次。最近我自己维护的一个日志转发程序可能需要改造以适应 storm 计算集群的需求，所以特地的在这方面做了一些思考。
 
 > ...
+
+* [监控服务设计的权衡](articles/monitor-systems-design)
+
+> 最近更新了一下自己的业余项目[metrictools](github.com/datastream/metrictools)。相比上次写博客时的设计，新的框架基本做到了分布式和高可用了。
+
+> ...
